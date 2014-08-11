@@ -1,6 +1,6 @@
 
 void setup(){
-  size(800, 500);
+  size(1000,800);
 }
   float c = 100000;
 void draw() {
