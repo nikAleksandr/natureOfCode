@@ -48,7 +48,7 @@ function Bird(){
 }
 Bird.prototype.applyForce = function(force){
 	this.acceleration.add(force);
-	//this.aAcceleration += .001*force.mag();
+	this.aAcceleration += .001*force.mag();
 };
 Bird.prototype.update = function(){
 	this.velocity.add(this.acceleration);
@@ -57,8 +57,8 @@ Bird.prototype.update = function(){
 	constrain(this.location.x,0,width-birdW);
 	constrain(this.location.y,0,height-birdW);
 	
-	//this.aVelocity += this.aAcceleration;
-	//this.angle += this.aVelocity;
+	this.aVelocity += this.aAcceleration;
+	this.angle += this.aVelocity;
 	
 	this.acceleration.mult(0);
 };
