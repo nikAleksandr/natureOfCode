@@ -32,15 +32,6 @@ function Mover (objWidth, objHeight, mass, xPos, yPos){
 		f.div(this.mass);
 		this.acc.add(f);
 	}
-	this.applyFriction = function(coefficient){
-		var c = 0.1;
-			if(coefficient) c = coefficient;
-		var normal = 1;
-		var friction = this.vel.copy();
-			friction.normalize();
-			friction.mult(-1);
-			friction.mult(c*normal); //coefficient of friction times the normal vector
-	}
 	this.update = function(){
 		this.vel.add(this.acc);
 		this.loc.add(this.vel);
@@ -48,30 +39,27 @@ function Mover (objWidth, objHeight, mass, xPos, yPos){
 		this.acc.mult(0);
 	}
 	this.checkEdges = function(){
-		if(this.loc.x > 340 && this.loc.x < 440) this.applyFriction(4);
+		
 		//check left and right edge
-		if (this.loc.x <= this.xSize/2) {
-			this.loc.x = this.xSize/2;
+		if (this.loc.x <= this.xSize) {
+			this.loc.x = this.xSize;
 			this.vel.x *= -0.9;
-			this.applyFriction();
-		} else if (this.loc.x >= (width - this.xSize/2)) {
-			this.loc.x = (width - this.xSize/2);
+		} else if (this.loc.x >= (width - this.xSize)) {
+			this.loc.x = (width - this.xSize);
 			this.vel.x *= -0.9;
-			this.applyFriction();
 	    }
 	    //check top and bottom edge
-	    if (this.loc.y <= this.ySize/2) {
-	    	this.loc.y = this.ySize/2;
+	    if (this.loc.y <= this.ySize) {
+	    	this.loc.y = this.ySize;
 	    	this.vel.y *= -0.9
-	    	this.applyFriction();
-	    } else if (this.loc.y >= (height - this.ySize/2)) {
-	    	this.loc.y = (height - this.ySize/2);
+	    } else if (this.loc.y >= (height - this.ySize)) {
+	    	this.loc.y = (height - this.ySize);
 	    	this.vel.y *= -0.9;
-	    	this.applyFriction();
 	    }
 	}
 	this.display = function(){
-	    fill(mass*-50 + 255);
+		stroke(0);
+	    fill(175);
 	    ellipse(this.loc.x, this.loc.y, this.xSize, this.ySize);
 	}
 }
@@ -91,15 +79,10 @@ function setup(){
 	gravity = createVector(0,0.3);
 
 	frameRate(30);
-	noStroke();
 }
 
 function draw() {
 	background(255);
-
-	//friction area
-	fill(230);
-	rect(340, 0, 100, height);
 
 	if(mouseIsPressed){
 		console.log("mouse pressed");
@@ -108,11 +91,8 @@ function draw() {
 
 	for(i=0; i<things.length; i++){
 		things[i].applyForce(wind);
-
-		//force of gravity depends on the mass of the object
 		var g = gravity.copy();
-		things[i].applyForce(g.mult(things[i].mass));
-
+		things[i].applyForce(g.mult(things[i].mass));  //force of gravity depends on the mass of the object
 		things[i].update();
 		things[i].checkEdges();
 		things[i].display();
