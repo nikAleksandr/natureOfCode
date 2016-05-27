@@ -18,28 +18,60 @@
 <script language="javascript" type="text/javascript">
 var things = [],
 	wind,
-	gravity;
+	gravity,
+	liquid,
+	edgeFrictionCoefficient = 0.1,
+	colors = ['#FFA69E', '#FF7E6B', '#8C5E58', '#A9F01D', '#FFF7F8'];
 
-function Mover (objWidth, objHeight, mass, xPos, yPos){
+function Liquid (xPos, yPos, lWidth, lHeight, lCoefficient){
+	this.x = xPos;
+	this.y = yPos;
+	this.w = lWidth;
+	this.h = lHeight;
+	this.c = lCoefficient;
+}
+
+function Mover (objWidth, objHeight, mass, xPos, yPos, color){
 	this.xSize = objWidth;
 	this.ySize = objHeight;
 	this.mass = mass;
 	this.loc = createVector(xPos, yPos);
 	this.vel = createVector(0, 0);
 	this.acc = createVector(0, 0);
+	this.color = mass*-50 + 255 | color;
 	this.applyForce = function(force){
 		var f = force.copy();
 		f.div(this.mass);
 		this.acc.add(f);
 	}
 	this.applyFriction = function(coefficient){
-		var c = 0.1;
-			if(coefficient) c = coefficient;
+		var c = coefficient;
 		var normal = 1;
 		var friction = this.vel.copy();
 			friction.normalize();
 			friction.mult(-1);
 			friction.mult(c*normal); //coefficient of friction times the normal vector
+	}
+	this.applyDrag = function(coefficient){
+		var c = coefficient;
+		var speed = this.vel.mag();
+		var dragMagnitude = c * speed * speed;
+		var drag = this.vel.copy();
+		drag.mult(-1);
+		drag.normalize();
+		drag.mult(dragMagnitude);
+
+		this.applyForce(drag);
+	}
+	this.attract = function(other){
+		var attractionForce = p5.Vector.sub(other.loc,this.loc);
+		var distance = attractionForce.mag();
+			distance = constrain(distance, 20, 100000)
+		var m = (10 * this.mass * other.mass)/(distance * distance);
+		attractionForce.normalize();
+		attractionForce.mult(m);
+
+		this.applyForce(attractionForce);
 	}
 	this.update = function(){
 		this.vel.add(this.acc);
@@ -47,44 +79,54 @@ function Mover (objWidth, objHeight, mass, xPos, yPos){
 
 		this.acc.mult(0);
 	}
+	this.isInside = function(l){
+		if (this.loc.x>l.x && this.loc.x<l.x+l.w && this.loc.y>l.y && this.loc.y<l.y+l.h){
+		    return true;
+		  } else {
+		    return false;
+		}
+	}
 	this.checkEdges = function(){
-		if(this.loc.x > 340 && this.loc.x < 440) this.applyFriction(4);
 		//check left and right edge
 		if (this.loc.x <= this.xSize/2) {
 			this.loc.x = this.xSize/2;
 			this.vel.x *= -0.9;
-			this.applyFriction();
+			this.applyFriction(edgeFrictionCoefficient);
 		} else if (this.loc.x >= (width - this.xSize/2)) {
 			this.loc.x = (width - this.xSize/2);
 			this.vel.x *= -0.9;
-			this.applyFriction();
+			this.applyFriction(edgeFrictionCoefficient);
 	    }
 	    //check top and bottom edge
 	    if (this.loc.y <= this.ySize/2) {
 	    	this.loc.y = this.ySize/2;
 	    	this.vel.y *= -0.9
-	    	this.applyFriction();
+	    	this.applyFriction(edgeFrictionCoefficient);
 	    } else if (this.loc.y >= (height - this.ySize/2)) {
 	    	this.loc.y = (height - this.ySize/2);
 	    	this.vel.y *= -0.9;
-	    	this.applyFriction();
+	    	this.applyFriction(edgeFrictionCoefficient);
 	    }
 	}
 	this.display = function(){
-	    fill(mass*-50 + 255);
+	    fill(this.color);
 	    ellipse(this.loc.x, this.loc.y, this.xSize, this.ySize);
 	}
 }
 
 function setup(){
-	createCanvas(640,480);
+	createCanvas(640,740);
 
-	for(i=0; i<50; i++){
-		var thingSize = random(30);
-		var thingMass = random(5);
+	liquid = new Liquid(0, 3/4*height, width, 1/4*height, 0.1);
+
+	for(i=0; i<10; i++){
+		var thingSizeX = random(20)+10;
+		var thingSizeY = random(20) +10;
+		var thingMass = random(4)+1;
 		var thingLocX = random(width);
 		var thingLocY = random(height);
-		things.push(new Mover(thingSize, thingSize, thingMass, thingLocX, thingLocY));
+		var color = colors[i%colors.length]; 
+		things.push(new Mover(thingSizeX, thingSizeX, thingMass, thingLocX, thingLocY, color));
 	}
 
 	wind = createVector(0,0);
@@ -97,9 +139,9 @@ function setup(){
 function draw() {
 	background(255);
 
-	//friction area
+	//high-drag area
 	fill(230);
-	rect(340, 0, 100, height);
+	rect(0, 3/4*height, width, 1/4*height);
 
 	if(mouseIsPressed){
 		console.log("mouse pressed");
@@ -113,6 +155,11 @@ function draw() {
 		var g = gravity.copy();
 		things[i].applyForce(g.mult(things[i].mass));
 
+		if(things[i].isInside(liquid)) things[i].applyDrag(liquid.c);
+
+		for(j=0; j<things.length; j++){
+			if(i!=j)things[i].attract(things[j]);
+		}
 		things[i].update();
 		things[i].checkEdges();
 		things[i].display();

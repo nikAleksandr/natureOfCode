@@ -17,7 +17,8 @@
 </html>
 <script language="javascript" type="text/javascript">
 var leftWind = true,
-	things = [],
+	hasFired = false,
+	bullet,
 	wind,
 	gravity,
 	liquid,
@@ -81,6 +82,14 @@ function Mover (objWidth, objHeight, mass, xPos, yPos, color){
 
 		this.applyForce(attractionForce);
 	}
+	this.fire = function(power){
+		var mousePos = createVector(mouseX, mouseY);
+		var direction = p5.Vector.sub(mousePos, this.loc);
+			direction.normalize();
+		var canon = direction.mult(power);
+
+		this.applyForce(canon);
+	}
 	this.update = function(){
 		this.vel.add(this.acc);
 		this.loc.add(this.vel);
@@ -132,11 +141,11 @@ function Mover (objWidth, objHeight, mass, xPos, yPos, color){
 }
 
 function setup(){
-	createCanvas(640,740);
+	createCanvas(1200,640);
 
 	liquid = new Liquid(0, 3/4*height, width, 1/4*height, 0.2);
 
-	for(i=0; i<10; i++){
+	/*for(i=0; i<10; i++){
 		var thingSizeX = random(10,40);
 		var thingSizeY = random(10,40);
 		var thingMass = random(2,6);
@@ -144,7 +153,8 @@ function setup(){
 		var thingLocY = random(height);
 		var color = colors[i%colors.length]; 
 		things.push(new Mover(thingSizeX, thingSizeY, thingMass, thingLocX, thingLocY, color));
-	}
+	}*/
+	bullet = new Mover(5, 10, 4, 10, 3/4*height-10, '#000000');
 
 	wind = createVector(0,0);
 	gravity = createVector(0,0.3);
@@ -160,28 +170,27 @@ function draw() {
 	fill(230);
 	rect(0, 3/4*height, width, 1/4*height);
 
-	if(mouseIsPressed){
-		if(leftWind) wind.set(0.5,0);
-		else wind.set(-0.5,0);
-	} else wind.set(0,0);
-
-	for(i=0; i<things.length; i++){
-		things[i].applyForce(wind);
-
+	if(mouseIsPressed & !hasFired){
+		bullet.fire(100);
+		hasFired = true;
+	}
+	if(hasFired){
 		//force of gravity depends on the mass of the object
 		var g = gravity.copy();
-		things[i].applyForce(g.mult(things[i].mass));
+		bullet.applyForce(g.mult(bullet.mass));
 
-		if(things[i].isInside(liquid)) things[i].applyDrag(liquid.c);
-		things[i].angleForce(0.01*things[i].acc.x);
+		if(bullet.isInside(liquid)) bullet.applyDrag(liquid.c);
+		bullet.angleForce(0.01*bullet.acc.x);
 
 		/*for(j=0; j<things.length; j++){
 			if(i!=j)things[i].attract(things[j]);
 		}*/
-		things[i].update();
-		things[i].checkEdges();
-		things[i].display();
+		bullet.update();
+		bullet.checkEdges();
 	}
+	
+	bullet.display();
+
 }
 function mouseReleased(){
 	if(leftWind) leftWind = false;
