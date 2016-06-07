@@ -94,11 +94,11 @@ function Mover (objWidth, objHeight, mass, xPos, yPos, color){
 		this.vel.add(this.acc);
 		this.loc.add(this.vel);
 
-		this.angleVel += this.angleAcc;
-		this.angle += this.angleVel;
+		//this.angleVel += this.angleAcc;
+		//this.angle += this.angleVel;
 
 		this.acc.mult(0);
-		this.angleAcc = 0;
+		//this.angleAcc = 0;
 	}
 	this.isInside = function(l){
 		if (this.loc.x>l.x && this.loc.x<l.x+l.w && this.loc.y>l.y && this.loc.y<l.y+l.h){
@@ -132,6 +132,8 @@ function Mover (objWidth, objHeight, mass, xPos, yPos, color){
 	this.display = function(){
 	    fill(this.color);
 
+	    this.angle = this.vel.heading();
+
 	    push();
 	    	translate(this.loc.x, this.loc.y);
 	    	rotate(this.angle);
@@ -154,7 +156,7 @@ function setup(){
 		var color = colors[i%colors.length]; 
 		things.push(new Mover(thingSizeX, thingSizeY, thingMass, thingLocX, thingLocY, color));
 	}*/
-	bullet = new Mover(5, 10, 4, 10, 3/4*height-10, '#000000');
+	bullet = new Mover(10, 5, 4, 10, 3/4*height-10, '#000000');
 
 	wind = createVector(0,0);
 	gravity = createVector(0,0.3);
